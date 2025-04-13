@@ -20,4 +20,4 @@ Klasyczna gra Tetris zaimplementowana w Pythonie przy użyciu biblioteki Pygame.
 
 1. Sklonuj repozytorium lub pobierz pliki projektu:
    ```bash
-   git clone <adres-repozytorium>
+   git clone <(https://github.com/PawelBybel/Tetris_py)>
