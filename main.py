@@ -1,9 +1,12 @@
+
+
 import pygame
 import random
 import os
 
-pygame.init()
+pygame.init()  # Inicjalizowanie gry
 
+# Stałe gry tj. Wielkość okna, kolory i kształty
 BLOCK_SIZE = 50
 GRID_WIDTH = 10
 GRID_HEIGHT = 20
@@ -17,26 +20,43 @@ RED = (255, 0, 0)
 COLORS = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0), (255, 0, 255), (0, 255, 255)]
 
 SHAPES = [
-    [[1, 1, 1, 1]], # I
-    [[1, 1], [1, 1]], # O
-    [[1, 1, 1], [0, 1, 0]], # T
-    [[1, 1, 1], [1, 0, 0]], # L
-    [[1, 1, 1], [0, 0, 1]], # J
-    [[1, 1, 0], [0, 1, 1]], # S
+    [[1, 1, 1, 1]],  # I
+    [[1, 1], [1, 1]],  # O
+    [[1, 1, 1], [0, 1, 0]],  # T
+    [[1, 1, 1], [1, 0, 0]],  # L
+    [[1, 1, 1], [0, 0, 1]],  # J
+    [[1, 1, 0], [0, 1, 1]],  # S
     [[0, 1, 1], [1, 1, 0]]  # Z
 ]
 
+
 class Tetris:
+    """Klasa obsługująca logikę, renderowanie i interakcje użytkownika w grze Tetris.
+
+    Attributes:
+        screen (pygame.Surface): Powierzchnia okna gry.
+        clock (pygame.time.Clock): Obiekt do kontrolowania czasu w grze.
+        font (pygame.font.Font): Czcionka do renderowania tekstu.
+        player_name (str): Nazwa gracza wprowadzona przed rozpoczęciem gry.
+        grid (list): Siatka gry przechowująca kolory klocków.
+        current_piece (dict): Aktualny klocek w grze.
+        game_over (bool): Flaga wskazująca koniec gry.
+        score (int): Aktualny wynik gracza.
+        highscore (int): Najwyższy zapisany wynik.
+    """
+
     def __init__(self):
+        """Inicjalizuje okno gry, czcionkę, nazwę gracza i stan gry."""
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         pygame.display.set_caption("Tetris")
         self.clock = pygame.time.Clock()
         self.font = pygame.font.SysFont("arial", 24)
-        self.player_name = self.get_player_name()  # Pobranie nazwy w oknie gry
+        self.player_name = self.get_player_name()
         self.reset_game()
         self.highscore = self.load_highscore()
 
     def reset_game(self):
+        """Resetuje stan gry do wartości początkowych."""
         self.grid = [[BLACK for _ in range(GRID_WIDTH)] for _ in range(GRID_HEIGHT)]
         self.current_piece = self.new_piece()
         self.game_over = False
@@ -48,6 +68,11 @@ class Tetris:
         self.move_delay = 100
 
     def load_highscore(self):
+        """Wczytuje najwyższy wynik z pliku 'tetris_scores.txt'.
+
+        Returns:
+            int: Najwyższy wynik lub 0, jeśli plik jest pusty.
+        """
         try:
             with open("tetris_scores.txt", "r") as file:
                 scores = []
@@ -60,6 +85,11 @@ class Tetris:
             return 0
 
     def get_player_name(self):
+        """Pobiera nazwę gracza w oknie gry.
+
+        Returns:
+            str: Wprowadzona nazwa gracza lub 'Gracz', jeśli pusta.
+        """
         name = ""
         input_active = True
         while input_active:
@@ -81,15 +111,30 @@ class Tetris:
                         return name.strip() if name.strip() else "Gracz"
                     elif event.key == pygame.K_BACKSPACE:
                         name = name[:-1]
-                    elif len(name) < 20:  # Ograniczenie długości nazwy
+                    elif len(name) < 20:
                         name += event.unicode if event.unicode.isprintable() else ""
 
     def new_piece(self):
+        """Tworzy nowy klocek z losowym kształtem i kolorem.
+
+        Returns:
+            dict: Klocek z atrybutami shape, color, x, y.
+        """
         shape = random.choice(SHAPES)
         color = random.choice(COLORS)
         return {"shape": shape, "color": color, "x": GRID_WIDTH // 2 - len(shape[0]) // 2, "y": 0}
 
     def valid_move(self, piece, x, y):
+        """Sprawdza, czy ruch klocka jest możliwy.
+
+        Args:
+            piece (dict): Klocek do sprawdzenia.
+            x (int): Pozycja x klocka.
+            y (int): Pozycja y klocka.
+
+        Returns:
+            bool: True, jeśli ruch jest możliwy, False w przeciwnym razie.
+        """
         for i in range(len(piece["shape"])):
             for j in range(len(piece["shape"][i])):
                 if piece["shape"][i][j]:
@@ -100,6 +145,7 @@ class Tetris:
         return True
 
     def merge_piece(self):
+        """Łączy klocek z siatką gry i sprawdza koniec gry."""
         for i in range(len(self.current_piece["shape"])):
             for j in range(len(self.current_piece["shape"][i])):
                 if self.current_piece["shape"][i][j]:
@@ -110,6 +156,7 @@ class Tetris:
             self.game_over = True
 
     def clear_lines(self):
+        """Usuwa pełne linie z siatki i aktualizuje wynik."""
         new_grid = [row for row in self.grid if any(cell == BLACK for cell in row)]
         lines_cleared = GRID_HEIGHT - len(new_grid)
         if lines_cleared == 1:
@@ -123,6 +170,7 @@ class Tetris:
         self.grid = [[BLACK for _ in range(GRID_WIDTH)] for _ in range(lines_cleared)] + new_grid
 
     def rotate_piece(self):
+        """Obraca aktualny klocek, jeśli ruch jest możliwy."""
         new_shape = [[self.current_piece["shape"][j][i] for j in range(len(self.current_piece["shape"]))]
                      for i in range(len(self.current_piece["shape"][0])-1, -1, -1)]
         temp_shape = self.current_piece["shape"]
@@ -131,11 +179,13 @@ class Tetris:
             self.current_piece["shape"] = temp_shape
 
     def save_score(self):
+        """Zapisuje wynik gracza do pliku 'tetris_scores.txt'."""
         with open("tetris_scores.txt", "a") as file:
             file.write(f"{self.score} - {self.player_name}\n")
         self.highscore = max(self.highscore, self.score)
 
     def draw(self):
+        """Rysuje siatkę gry, aktualny klocek oraz wyniki na ekranie."""
         self.screen.fill(BLACK)
         for i in range(GRID_HEIGHT):
             for j in range(GRID_WIDTH):
@@ -162,6 +212,11 @@ class Tetris:
         pygame.display.flip()
 
     def game_over_screen(self):
+        """Wyświetla ekran końca gry i pozwala wybrać ponowną grę lub wyjście.
+
+        Returns:
+            bool: True, jeśli wybrano ponowną grę, False, jeśli wyjście.
+        """
         self.save_score()
         selected = 0  # 0: Zagraj ponownie, 1: Wyjdź
         while True:
@@ -196,6 +251,7 @@ class Tetris:
                         return False
 
     def run(self):
+        """Uruchamia główną pętlę gry, obsługując logikę i zdarzenia."""
         while True:
             fall_time = 0
             fall_speed = 500
@@ -252,7 +308,7 @@ class Tetris:
 
                 self.draw()
 
-            #Game Over
+            # Game Over
             if not self.game_over_screen():
                 pygame.quit()
                 return
